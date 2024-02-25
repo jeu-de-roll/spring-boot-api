@@ -1,2 +1,4 @@
-#Ignore node modules
+#Ignore node modules and .idea
 node_modules
+.idea
+
