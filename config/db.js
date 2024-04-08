@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost:27017/rpg-api', {})
+mongoose.connect('mongodb://localhost:27017/rpg-api', {
+});
 
 const db = mongoose.connection;
 
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', () => {
-    console.log('Connected to MongoDB');
-});
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
+module.exports = db;

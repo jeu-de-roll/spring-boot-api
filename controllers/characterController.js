@@ -1,5 +1,26 @@
 const Character = require('../models/character');
 const Game = require('../models/game');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const folderName = 'uploads';
+
+if (!fs.existsSync(folderName)) {
+    fs.mkdirSync(folderName);
+    console.log(`Le dossier ${folderName} a été créé avec succès.`);
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, folderName);
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage: storage });
 
 exports.getAllCharacters = async (req, res) => {
     try {
@@ -41,7 +62,6 @@ exports.getAllCharactersByGame = async (req, res) => {
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
-
 }
 
 exports.createCharacter = async (req, res) => {
@@ -51,45 +71,29 @@ exports.createCharacter = async (req, res) => {
             return res.status(404).json({ message: 'Game not found' });
         }
 
-        const characterStats = req.body.stats.map((stat, index) => ({
-            stat: stat.stat,
-            value: stat.value
-        }));
+        upload.single('sheetUrl')(req, res, async (err) => {
+            if (err instanceof multer.MulterError) {
+                return res.status(400).json({ message: 'Erreur lors du téléchargement du fichier' });
+            } else if (err) {
+                return res.status(500).json({ message: 'Erreur serveur' });
+            }
 
-        const character = new Character({
-            name: req.body.name,
-            game: req.params.gameId,
-            description: req.body.description,
-            image: req.body.image,
-            stats: characterStats
+            const character = new Character({
+                name: req.body.name,
+                level: req.body.level,
+                hp: req.body.hp,
+                inventory: req.body.inventory,
+                game: req.params.gameId,
+                sheetUrl: req.file ? req.file.path : ''
+            });
+
+            const newCharacter = await character.save();
+            res.status(201).json(newCharacter);
         });
-
-        const newCharacter = await character.save();
-        res.status(201).json(newCharacter);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
 }
-
-exports.updateStats = async (req, res) => {
-    try {
-        const character = await Character.findById(req.params.id);
-        if (!character) {
-            return res.status(404).json({ message: 'Character not found' });
-        }
-
-        const updatedStats = req.body.stats.map(stat => ({
-            idStat: stat.idStat,
-            value: stat.value
-        }));
-
-        character.stats = updatedStats;
-        await character.save();
-        res.json(character);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
-};
 
 exports.updateCharacter = async (req, res) => {
     try {

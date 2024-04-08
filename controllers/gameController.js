@@ -1,11 +1,47 @@
 const Game = require('../models/game');
-const Stat = require('../models/stats');
+const multer = require('multer');
+const path = require('path');
+const fs = require("fs");
+
+const folderName = 'uploads';
+
+if (!fs.existsSync(folderName)) {
+    fs.mkdirSync(folderName);
+    console.log(`Le dossier ${folderName} a été créé avec succès.`);
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage: storage });
 
 exports.createGame = async (req, res) => {
     try {
-        const game = new Game(req.body);
-        await game.save();
-        res.status(201).json({ message: 'Partie créée avec succès', game });
+        console.log(req.body);
+        upload.single('blankSheet')(req, res, async (err) => {
+            if (err instanceof multer.MulterError) {
+                return res.status(400).json({ message: 'Erreur lors du téléchargement du fichier' });
+            } else if (err) {
+                return res.status(500).json({ message: 'Erreur serveur' });
+            }
+
+            const game = new Game({
+                name: req.body.name,
+                description: req.body.description,
+                blankSheet: req.file ? req.file.path : '',
+                master: req.body.master,
+                players: req.body.players || []
+            });
+
+            const newGame = await game.save();
+            res.status(201).json(newGame);
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Erreur serveur' });
@@ -14,32 +50,11 @@ exports.createGame = async (req, res) => {
 
 exports.getGameById = async (req, res) => {
     try {
-        const game = await Game.findById(req.params.gameId).populate('stats');
-        if (!game) {
-            return res.status(404).json({ message: 'Partie non trouvée' });
-        }
-        res.json(game);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Erreur serveur' });
-    }
-}
-
-exports.createStat = async (req, res) => {
-    try {
         const game = await Game.findById(req.params.gameId);
         if (!game) {
             return res.status(404).json({ message: 'Partie non trouvée' });
         }
-
-        const stat = new Stat(req.body);
-        stat.game = game._id;
-        await stat.save();
-
-        game.stats.push(stat._id);
-        await game.save();
-
-        res.status(201).json({ message: 'Statistique créée avec succès', stat });
+        res.json(game);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Erreur serveur' });

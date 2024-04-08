@@ -19,10 +19,9 @@ const gameSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User'
     }],
-    stats: [{
-        type: Schema.Types.ObjectId,
-        ref: 'Stat'
-    }]
+    blankSheet: {
+        type: String,
+    }
 });
 
 module.exports = mongoose.model('Game', gameSchema);
