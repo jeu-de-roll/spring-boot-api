@@ -61,6 +61,19 @@ exports.getGameById = async (req, res) => {
     }
 }
 
+exports.getAllGames = async (req, res) => {
+    try {
+        const games = await Game.find();
+        if (!games) {
+            return res.status(404).json({ message: 'Partie non trouvée' });
+        }
+        res.json(games);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Erreur serveur' });
+    }
+}
+
 exports.deleteGame = async (req, res) => {
     try {
         const game = await Game.findById(req.params.gameId);
