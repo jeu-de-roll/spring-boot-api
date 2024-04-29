@@ -25,6 +25,9 @@ const characterSchema = new Schema({
     },
     sheetUrl: {
         type: String,
+    },
+    type: {
+        type: String,
     }
 });
 

@@ -84,7 +84,8 @@ exports.createCharacter = async (req, res) => {
                 hp: req.body.hp,
                 inventory: req.body.inventory,
                 game: req.params.gameId,
-                sheetUrl: req.file ? req.file.path : ''
+                sheetUrl: req.file ? req.file.path : '',
+                type: req.body.type
             });
 
             const newCharacter = await character.save();
