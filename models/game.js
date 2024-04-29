@@ -21,7 +21,10 @@ const gameSchema = new Schema({
     }],
     blankSheet: {
         type: String,
-    }
+    },
+    chronics: [{
+        type: String
+    }]
 });
 
 module.exports = mongoose.model('Game', gameSchema);

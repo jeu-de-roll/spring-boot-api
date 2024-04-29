@@ -2,6 +2,7 @@ const Game = require('../models/game');
 const multer = require('multer');
 const path = require('path');
 const fs = require("fs");
+const Character = require("../models/character");
 
 const folderName = 'uploads';
 
@@ -36,7 +37,8 @@ exports.createGame = async (req, res) => {
                 description: req.body.description,
                 blankSheet: req.file ? req.file.path : '',
                 master: req.body.master,
-                players: req.body.players || []
+                players: req.body.players || [],
+                chronics: req.body.chronics || []
             });
 
             const newGame = await game.save();
@@ -73,6 +75,20 @@ exports.getAllGames = async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur' });
     }
 }
+
+exports.updateGame = async (req, res) => {
+    try {
+        const game = await Game.findById(req.params.gameId);
+        if (!game) {
+            return res.status(404).json({ message: 'Partie non trouvée' });
+        }
+        Object.assign(game, req.body);
+        await game.save();
+        res.json(game);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
 
 exports.deleteGame = async (req, res) => {
     try {
